@@ -1,8 +1,6 @@
 package form;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Created by 1 on 09.11.2014.
@@ -11,7 +9,7 @@ public class AppForm extends JFrame {
     //private JButton button1;
     private JPanel rootPanel;
     //private JLabel label1;
-    private ImageEntry imageFrame;
+    private ImageInput imageFrame;
 
     public AppForm() {
         super("Hello!");
@@ -30,7 +28,7 @@ public class AppForm extends JFrame {
             }
         });*/
 
-        imageFrame = new ImageEntry();
+        imageFrame = new ImageInput();
         imageFrame.setBounds(100,100,100,100);
         getContentPane().add(imageFrame);
         imageFrame.repaint();
