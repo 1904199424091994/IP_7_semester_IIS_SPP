@@ -15,7 +15,6 @@ public class Grid extends JPanel {
     public GridData getGridData() {
         return gridData;
     }
-
     public void setGridData(GridData data) {
         this.gridData = data;
     }

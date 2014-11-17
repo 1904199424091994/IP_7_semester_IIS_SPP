@@ -1,39 +1,70 @@
 package form;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 
 /**
  * Created by 1 on 09.11.2014.
  */
 public class AppForm extends JFrame {
-    //private JButton button1;
+    //region Элементы формы
+    private InputImage inputImage;
+    private Grid recognizedSymbolGrid;
     private JPanel rootPanel;
-    //private JLabel label1;
-    private ImageInput imageFrame;
+    private JButton btnRecognizeInputImage;
+    private JButton btnClear;
+    //endregion
 
     public AppForm() {
-        super("Hello!");
-        rootPanel.setLayout(new BoxLayout(rootPanel, BoxLayout.Y_AXIS));
-        setContentPane(rootPanel);
-        //pack();
+        //region Настройки формы
+        super("NewForm");
+        this.setLayout(null);
+        this.setResizable(false);
+        this.setBounds(200, 200, 800, 600);
+        this.setVisible(true);
+        Container container = this.getContentPane();
+        //endregion
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(200,200,500,500);
+        //region Настройки рисовального блока
+        inputImage = new InputImage();
+        inputImage.setBounds(10,10, 200, 200);
+        container.add(inputImage);
+        //endregion
 
-        /*button1.addActionListener(new ActionListener() {
+        //region Кнопка для заполнения Grid
+        btnRecognizeInputImage = new JButton("Распознать");
+        btnRecognizeInputImage.setBounds(10, 220, 200, 30);
+        container.add(btnRecognizeInputImage);
+        btnRecognizeInputImage.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //JOptionPane.showConfirmDialog(AppForm.this, "!!!");
-                label1.setText("!!!!!!!!!!!!!!!!!!!!!!!!");
+                inputImage.convertToGrid();
             }
-        });*/
+        });
+        //endregion
 
-        imageFrame = new ImageInput();
-        imageFrame.setBounds(100,100,100,100);
-        getContentPane().add(imageFrame);
-        imageFrame.repaint();
-        imageFrame.setVisible(true);
-        setVisible(true);
+        //region Кнопка для очистки Grid и изображения
+        btnClear = new JButton("Очистить");
+        btnClear.setBounds(10, 260, 200, 30);
+        container.add(btnClear);
+        btnClear.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inputImage.clear();
+                recognizedSymbolGrid.gridData = new GridData(' ', 40, 40);
+                recognizedSymbolGrid.repaint();
+            }
+        });
+        //endregion
 
+        //region Настройки для Grid
+        recognizedSymbolGrid = new Grid(40,40);
+        recognizedSymbolGrid.setBounds(10, 300, 200, 200);
+        container.add(recognizedSymbolGrid);
+        this.inputImage.grid = recognizedSymbolGrid;
+        //endregion
     }
 }
