@@ -21,6 +21,7 @@ public class InputImage extends JPanel {
     protected int[] pixelMap;
     protected double coefficientX;
     protected double coefficientY;
+    private int symbPadding = 5;
 
     public InputImage() {
         enableEvents(AWTEvent.MOUSE_MOTION_EVENT_MASK |
@@ -105,28 +106,36 @@ public class InputImage extends JPanel {
         //сверху-вниз
         for (int y = 0; y < iHeight; y++) {
             if (!isHorizontalLineClear(y)) {
-                y_InputSymbolTop = y;
+                y_InputSymbolTop = y - symbPadding;
+                if(y_InputSymbolTop < 0)
+                    y_InputSymbolTop = 0;
                 break;
             }
         }
         //снизу-вверх
         for (int y = iHeight - 1; y >= 0; y--) {
             if (!isHorizontalLineClear(y)) {
-                y_InputSymbolBottom = y;
+                y_InputSymbolBottom = y + symbPadding;
+                if(y_InputSymbolBottom >= iHeight)
+                    y_InputSymbolBottom = iHeight - 1;
                 break;
             }
         }
         //слева-направо
         for (int x = 0; x < iWidth; x++) {
             if (!isVerticalLineClear(x)) {
-                x_InputSymbolLeft = x;
+                x_InputSymbolLeft = x - symbPadding;
+                if(x_InputSymbolLeft < 0)
+                    x_InputSymbolLeft = 0;
                 break;
             }
         }
         //справо-налево
         for (int x = iWidth - 1; x >= 0; x--) {
             if (!isVerticalLineClear(x)) {
-                x_InputSymbolRight = x;
+                x_InputSymbolRight = x + symbPadding;
+                if(x_InputSymbolRight >= iWidth)
+                    x_InputSymbolRight = iWidth - 1;
                 break;
             }
         }

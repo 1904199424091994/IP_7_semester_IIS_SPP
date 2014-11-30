@@ -51,7 +51,6 @@ public class GridData implements Comparable, Cloneable{
         }
     }
 
-    //TODO очень странный метод
     @Override
     public int compareTo(Object o) {
         GridData obj = (GridData)o;

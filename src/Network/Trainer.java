@@ -10,6 +10,7 @@ public class Trainer {
     private double[][] output;
     private double[] classify;
     private int trainingSetCount;
+
     public Trainer(int inputCount, int outputCount) {
         this.inputCount = inputCount;
         this.outputCount = outputCount;
@@ -36,7 +37,7 @@ public class Trainer {
     }
 
     //Самое интересное
-    void setInput(int set, int index, double value) throws RuntimeException
+    public void setInput(int set, int index, double value) throws RuntimeException
     {
         if((set < 0) || (set >= trainingSetCount)) {
             throw (new RuntimeException("Training set is out of range:" + set));
@@ -47,7 +48,7 @@ public class Trainer {
         input[set][index] = value;
     }
 
-    void setOutput(int set,int index,double value)
+    public void setOutput(int set,int index,double value)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )
@@ -57,7 +58,7 @@ public class Trainer {
         output[set][index] = value;
     }
 
-    void setClassify(int set,double value)
+    public void setClassify(int set,double value)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )
@@ -67,7 +68,7 @@ public class Trainer {
 
 
 
-    double getInput(int set,int index)
+    public double getInput(int set,int index)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )
@@ -78,7 +79,7 @@ public class Trainer {
     }
 
 
-    double getOutput(int set,int index)
+    public double getOutput(int set,int index)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )
@@ -89,7 +90,7 @@ public class Trainer {
     }
 
 
-    double getClassify(int set)
+    public double getClassify(int set)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )
@@ -97,7 +98,7 @@ public class Trainer {
         return classify[set];
     }
 
-    double []getOutputSet(int set)
+    public double[] getOutputSet(int set)
             throws RuntimeException
     {
         if ( (set<0) || (set>=trainingSetCount) )

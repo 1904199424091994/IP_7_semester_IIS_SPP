@@ -21,7 +21,7 @@ abstract public class NeuralNetwork {
         return output;
     }
 
-    double calculateTrialError(Trainer trainingSet) throws RuntimeException{
+    double calculateTrialError(Trainer trainingSet) throws RuntimeException {
         int size, tset, tclass;
         double diff;
 
@@ -81,6 +81,7 @@ abstract public class NeuralNetwork {
         return rtn;
     }
 
+    /*Случайность весов*/
     void randomizeWeights(double weight[][]) {
         double r;
         double sqrt12 = 3.464101615;
