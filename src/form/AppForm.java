@@ -5,10 +5,11 @@ import Network.Trainer;
 import Statistics.UpdateStats;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeListener;
+import java.io.*;
 
 /**
  * Created by 1 on 09.11.2014.
@@ -27,6 +28,8 @@ public class AppForm extends JFrame implements Runnable {
     private JButton btnAddNewSymbol;
     private JButton btnDeleteItem;
     private JButton btnRecognize;
+    private JButton btnSave;
+    private JButton btnLoad;
     public static JLabel lblTries;
     public static JLabel lblLastError;
     public static JLabel lblBestError;
@@ -64,7 +67,6 @@ public class AppForm extends JFrame implements Runnable {
             @Override
             public void actionPerformed(ActionEvent e) {
                 inputImage.convertToGrid();
-                //updateStats(1, 1, 1);
             }
         });
         //endregion
@@ -88,9 +90,57 @@ public class AppForm extends JFrame implements Runnable {
         this.inputImage.grid = recognizedSymbolGrid;
         //endregion
 
+        //region Кнопка "Добавить"
+        btnAddNewSymbol = new JButton("Добавить");
+        btnAddNewSymbol.setBounds(250, 220, 100, 30);
+        container.add(btnAddNewSymbol);
+        btnAddNewSymbol.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addNewLetter();
+            }
+        });
+        //endregion
+
+        //region Кнопка "Удалить"
+        btnDeleteItem = new JButton("Удалить");
+        btnDeleteItem.setBounds(350, 220, 100, 30);
+        container.add(btnDeleteItem);
+        btnDeleteItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deleteSelectedListItem();
+            }
+        });
+        //endregion
+
+        //region Кнопка "Загрузить"
+        btnLoad = new JButton("Загрузить");
+        btnLoad.setBounds(250, 260, 100, 30);
+        container.add(btnLoad);
+        btnLoad.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadFromFile();
+            }
+        });
+        //endregion
+
+        //region Кнопка "Сохранить"
+        btnSave = new JButton("Сохранить");
+        btnSave.setBounds(350, 260, 100, 30);
+        container.add(btnSave);
+        btnSave.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveToFile();
+            }
+        });
+        //endregion
+
         //region Кнопка для тренировки сети
         btnBeginTraining = new JButton("Тренировать");
-        btnBeginTraining.setBounds(250, 260, 180, 30);
+        btnBeginTraining.setBounds(250, 300, 200, 100);
         container.add(btnBeginTraining);
         btnBeginTraining.addActionListener(new ActionListener() {
             @Override
@@ -102,7 +152,7 @@ public class AppForm extends JFrame implements Runnable {
 
         //region Кнопка для запуска алгоритма распознавания
         btnRecognize = new JButton("Распознать");
-        btnRecognize.setBounds(250, 300, 200, 200);
+        btnRecognize.setBounds(250, 400, 200, 100);
         container.add(btnRecognize);
         btnRecognize.addActionListener(new ActionListener() {
             @Override
@@ -112,38 +162,16 @@ public class AppForm extends JFrame implements Runnable {
         });
         //endregion
 
-        //region Кнопка "Добавить"
-        btnAddNewSymbol = new JButton("Добавить");
-        btnAddNewSymbol.setBounds(250, 220, 90, 30);
-        container.add(btnAddNewSymbol);
-        btnAddNewSymbol.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addNewLetter();
-            }
-        });
-        //endregion
-
-        //region "Удалить"
-        btnDeleteItem = new JButton("Удалить");
-        btnDeleteItem.setBounds(340, 220, 90, 30);
-        container.add(btnDeleteItem);
-        btnDeleteItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                deleteSelectedListItem();
-            }
-        });
-        //endregion
-
         //region Список для отображения символов (для распознавания)
         jListScrollPane = new JScrollPane();
         jListScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         jListScrollPane.setOpaque(false);
         jListScrollPane.setBounds(250, 10, 200, 200);
+        jListScrollPane.setBorder(new LineBorder(Color.black, 1));
         container.add(jListScrollPane);
         lstLetters = new JList();
-        lstLetters.setBounds(0, 0, 196, 196);
+        lstLetters.setBorder(new LineBorder(Color.black, 1));
+        lstLetters.setBounds(0, 0, 172, 197);
         jListScrollPane.getViewport().add(lstLetters);
         lstLetters.setModel(letterListModel);
         //endregion
@@ -170,9 +198,9 @@ public class AppForm extends JFrame implements Runnable {
 
         if (network.halt) {
             trainThread = null;
-            btnBeginTraining.setText("Begin Training");
+            btnBeginTraining.setText("Тренировать");
             JOptionPane.showMessageDialog(this,
-                    "Training has completed.", "Training",
+                    "Ты натренировал меня... Полностью!", "Тренировка",
                     JOptionPane.PLAIN_MESSAGE);
         }
 
@@ -189,6 +217,7 @@ public class AppForm extends JFrame implements Runnable {
         }
     }
 
+    //region Функционал списка
     private void addNewLetter() {
         //Панель
         JPanel panel = new JPanel();
@@ -247,8 +276,9 @@ public class AppForm extends JFrame implements Runnable {
         }
         letterListModel.remove(i);
     }
+    //endregion
 
-    //Тренировать нейронную сеть
+    //region Тренировка нейронной сети
     private void train() {
         if (trainThread == null) {
             //train.setText("Stop Training");
@@ -286,7 +316,9 @@ public class AppForm extends JFrame implements Runnable {
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+    //endregion
 
+    //region Распознавание изображения
     public void recognize() {
         if ( network == null ) {
             JOptionPane.showMessageDialog(this,
@@ -301,14 +333,14 @@ public class AppForm extends JFrame implements Runnable {
         GridData ds = recognizedSymbolGrid.getGridData();
         for ( int y=0;y<ds.getHeight();y++ ) {
             for ( int x=0;x<ds.getWidth();x++ ) {
-                input[idx++] = ds.getDataFromGrid(x,y)?.5:-.5;
+                input[idx++] = ds.getDataFromGrid(x, y)?.5:-.5;
             }
         }
 
         double normfac[] = new double[1];
         double synth[] = new double[1];
 
-        int best = network.getWinner ( input , normfac , synth ) ;
+        int best = network.getWinner(input, normfac, synth) ;
         char map[] = mapNeurons();
         JOptionPane.showMessageDialog(this,
                 "  That letter is " + map[best], "Recognition Successful",
@@ -334,12 +366,79 @@ public class AppForm extends JFrame implements Runnable {
                 }
             }
 
-            int best = network.getWinner ( input , normfac , synth ) ;
+            int best = network.getWinner(input, normfac, synth) ;
 
             map[best] = ds.getSymbol();
         }
         return map;
     }
+    //endregion
+
+    //region Загрузить/сохранить в файл
+    public void saveToFile() {
+        try {
+            BufferedWriter out = new BufferedWriter (new OutputStreamWriter(new FileOutputStream("./sample.dat"), "UTF8"));
+
+            for ( int i=0;i<letterListModel.size();i++ ) {
+                GridData ds = (GridData)letterListModel.elementAt(i);
+                //ps.print( ds.getLetter() + ":" );
+                out.write( ds.getSymbol() + ":" );
+                for ( int y=0;y<ds.getHeight();y++ ) {
+                    for ( int x=0;x<ds.getWidth();x++ ) {
+                        out.write( ds.getDataFromGrid(x, y)?"1":"0" );
+                    }
+                }
+                out.newLine();
+            }
+
+            out.close();
+            clear();
+            JOptionPane.showMessageDialog(this,
+                    "Сохранено в 'sample.dat'.",
+                    "Сохранение",
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch ( Exception e ) {
+            JOptionPane.showMessageDialog(this,"Ошибка: " + e, "Ошибка", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void loadFromFile() {
+        try {
+            FileReader f;// the actual file stream
+            BufferedReader r;// used to read the file line by line
+            //f = new FileInputStream( new File("./sample.dat") );
+            r = new BufferedReader(new InputStreamReader(new FileInputStream ("./sample.dat"), "UTF8"));
+            String line;
+            int i=0;
+
+            letterListModel.clear();
+
+            while ( (line=r.readLine()) !=null ) {
+                GridData ds = new GridData(line.charAt(0), AppForm.gridWidth, AppForm.gridHeight);
+                letterListModel.add(i++,ds);
+                int idx=2;
+                for ( int y=0;y<ds.getHeight();y++ ) {
+                    for ( int x=0;x<ds.getWidth();x++ ) {
+                        ds.setDataToGrid(x,y,line.charAt(idx++)=='1');
+                    }
+                }
+            }
+
+            r.close();
+            clear();
+            JOptionPane.showMessageDialog(this,
+                    "Загружено из 'sample.dat'.","Загрузка",
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch ( Exception e ) {
+            JOptionPane.showMessageDialog(this,
+                    "Ошибка: " + e,"Загрузка",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    //endregion
 
     //Очистить
     private void clear() {
