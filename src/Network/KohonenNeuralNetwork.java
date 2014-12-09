@@ -1,16 +1,15 @@
 package Network;
 
 import form.AppForm;
-import form.InputImage;
 
 /**
  * Created by 1 on 29.11.2014.
  */
 public class KohonenNeuralNetwork extends NeuralNetwork {
     //веса выходных нейронов, рассчитывающиеся по весам входных нейронов
-    double outputWeights[][];
+    protected double outputWeights[][];
     //метод тренировки
-    protected int learnMethod = 1;
+    //protected int learnMethod = 1; //(0 - метод-суммы, 1 - метод-вычисления)
     //коэффициент обучения
     protected double learnRate = 0.3;
     //прерываем, если ошибка за пределами данного лимита
@@ -68,18 +67,17 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     * Нормализация ввода
     * @input - входной массив представления рисунка
     * @normfac - результат
-    * @synth - последний искусственный ввод
     * */
-    void normalizeInput(final double input[], double normfac[], double synth[]) {
-        double length, d;
-        length = vectorLength(input);
+    void normalizeInput(final double input[], double normfac[]/*, double synth[]*/) {
+        double length;
+        length = getVectorLength(input);
 
         //для случая очень малой длины (удалить наверное)
         if(length < 1.E-30)
             length = 1.E-30;
 
         normfac[0] = 1.0 / Math.sqrt(length);
-        synth[0] = 0.0;
+        //synth[0] = 0.0;
     }
 
     /*
@@ -87,18 +85,18 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     *
     * @weights - массив входных весов
     * */
-    void normalizeWeight(double[] weights) {
+    void normalizeWeight(double[] vector) {
         double length;
-        length = vectorLength(weights);
+        length = getVectorLength(vector);
 
-        //для случая очень малой длины (удалить наверное)
+        //для случая малой суммы квадратов
         if(length < 1.E-30)
             length = 1.E-30;
 
-        length = 1.0 / Math.sqrt(length);
+        double normfac = 1.0 / Math.sqrt(length);
         for(int i = 0; i < this.inputNeuronCount; i++)
-            weights[i] *= length;
-        weights[this.inputNeuronCount] = 0;
+            vector[i] *= normfac;
+        vector[this.inputNeuronCount] = 0;
     }
 
     /*
@@ -106,7 +104,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     *
     * @input - входное изображение
     * */
-    void trial(double input[]) {
+    /*void trial(double input[]) {
         double normfac[] = new double[1],
                synth[] = new double[1],
                optr[];
@@ -126,7 +124,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
             if(this.output[i] < 0.0)
                 this.output[i] = 0.0;
         }
-    }
+    }*/
 
     /*
     * На основе входных данных получает выигравший нейрон
@@ -137,17 +135,17 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     *
     * @return --- выигравший нейрон
     * */
-    public int getWinner(double input[], double normfac[], double synth[]) {
+    public int getWinner(double input[], double normfac[]/*, double synth[]*/) {
         int win = 0;
         double biggest, optr[];
 
-        normalizeInput(input, normfac, synth);
+        normalizeInput(input, normfac/*, synth*/);
         biggest = -1.E30;
 
         for(int i = 0; i < this.outputNeuronCount; i++) {
             optr = outputWeights[i];
-            this.output[i] = dotProduct(input, optr) * normfac[0]
-                             + synth[0] * optr[this.inputNeuronCount];
+            this.output[i] = getDotProduct(input, optr) * normfac[0];
+                             //+ synth[0] * optr[this.inputNeuronCount];
 
             //К биполярным (-1,1 ---> 0,1)
             this.output[i] = 0.5 * (this.output[i] + 1.0);
@@ -179,12 +177,12 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     * @work --- область работ
     * */
 
-    void evaluateErrors(double rate, int learnMethod, int won[],
-                        double errors[], double corrections[][],
-                        double work[]) throws  RuntimeException {
+    void evaluateErrors(double rate, /*int learnMethod,*/ int won[],
+                        double error[], double corrections[][]
+                        /*double work[]*/) throws  RuntimeException {
         int best, size, tset;
         double dptr[], normfac[] = new double[1];
-        double synth[] = new double[1], cptr[], wptr[], length, diff;
+        double /*synth[] = new double[1],*/ cptr[], wptr[], length, diff;
 
         //сбрасываем коррекцию и счетчик побед
         for(int y = 0; y < corrections.length; y++) {
@@ -192,17 +190,15 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
                 corrections[y][x] = 0;
             }
         }
-
         for(int i = 0; i < won.length; i++) {
             won[i] = 0;
         }
 
-        errors[0] = 0.0;
+        error[0] = 0.0;
 
-        //бежим через всех "тренеров" чтобы определить коррекцию
         for(tset = 0; tset < this.trainer.getTrainingSetCount(); tset++) {
             dptr = this.trainer.getInputSet(tset);
-            best = getWinner(dptr, normfac, synth);
+            best = getWinner(dptr, normfac/*, synth*/);
             won[best]++;
             wptr = this.outputWeights[best];
             cptr = corrections[best];
@@ -211,30 +207,30 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
             for(int i = 0; i < this.inputNeuronCount; i++) {
                 diff = dptr[i] * normfac[0] - wptr[i];
                 length += (diff *diff);
-                if(learnMethod != 0)
+                //if(learnMethod != 0)
                     cptr[i] += diff;
-                else
-                    work[i] = rate * dptr[i] * normfac[0] + wptr[i];
+                //else
+                //    work[i] = rate * dptr[i] * normfac[0] + wptr[i];
             }
 
-            diff = synth[0] - wptr[this.inputNeuronCount];
+            diff = /*synth[0]*/ (-1) * wptr[this.inputNeuronCount];
             length += (diff * diff);
 
-            if(learnMethod != 0)
+            //if(learnMethod != 0)
                 cptr[this.inputNeuronCount] += diff;
-            else
-                work[this.inputNeuronCount] = rate * synth[0] + wptr[this.inputNeuronCount];
+            //else
+            //    work[this.inputNeuronCount] = rate * synth[0] + wptr[this.inputNeuronCount];
 
-            if(length > errors[0])
-                errors[0] = length;
+            if(length > error[0])
+                error[0] = length;
 
-            if(learnMethod == 0) {
+            /*if(learnMethod == 0) {
                 normalizeWeight(work);
                 for(int i = 0; i < this.inputNeuronCount; i++)
                     cptr[i] += work[i] - wptr[i];
-            }
+            }*/
         }
-        errors[0] = Math.sqrt(errors[0]);
+        error[0] = Math.sqrt(error[0]);
     }
 
     /*
@@ -247,39 +243,38 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     * @errors --- ошибки
     * @corrections --- коррекции
     * */
-    void adjustWeights(double rate, int learnMethod,
-                       int[] won, double errors[],
+    void adjustWeights(double rate, //int learnMethod,
+                       int[] won, double error[],
                        double corrections[][]) {
-        double corr, cptr[], wptr[], length, f;
+        double corr, correction[], weight[], length, f;
 
-        errors[0] = 0.0;
+        error[0] = 0.0;
 
         for(int i = 0; i < this.outputNeuronCount; i++) {
             //пропускаем ни разу не выигравшие нейроны
             if(won[i] == 0)
                 continue;
 
-            wptr = this.outputWeights[i];
-            cptr = corrections[i];
+            weight = this.outputWeights[i];
+            correction = corrections[i];
 
             f = 1.0 / (double)won[i];
 
-            if(learnMethod != 0)
+            //if(learnMethod != 0)
                 f *= rate;
 
             length = 0.0;
 
             for(int j = 0; j < this.inputNeuronCount; j++) {
-                corr = f * cptr[j];
-                wptr[j] += corr;
+                corr = f * correction[j];
+                weight[j] += corr;
                 length += (corr * corr);
             }
 
-            if(length > errors[0])
-                errors[0] = length;
+            if(length > error[0])
+                error[0] = length;
         }
-        //масштабируем коррекцию
-        errors[0] = Math.sqrt(errors[0]) / rate;
+        error[0] = Math.sqrt(error[0]) / rate;
     }
 
     /*
@@ -290,14 +285,14 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     void forceWin(int won[]) throws RuntimeException {
         int best, size, which = 0;
         double dptr[], normfac[] = new double[1];
-        double synth[] = new double[1], dist, optr[];
+        double /*synth[] = new double[1],*/ dist, optr[];
 
         size = this.inputNeuronCount + 1;
         dist = 1.E30;
 
         for(int tset = 0; tset < this.trainer.getTrainingSetCount(); tset++) {
             dptr = this.trainer.getInputSet(tset);
-            best = getWinner(dptr, normfac, synth);
+            best = getWinner(dptr, normfac/*, synth*/);
             if(this.output[best] < dist) {
                 dist = output[best];
                 which = tset;
@@ -305,7 +300,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
         }
 
         dptr = this.trainer.getInputSet(which);
-        best = getWinner(dptr, normfac, synth);
+        best = getWinner(dptr, normfac/*, synth*/);
 
         dist = -1.E30;
         int i = this.outputNeuronCount;
@@ -321,19 +316,17 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
         optr = this.outputWeights[which];
         System.arraycopy(dptr, 0, optr, 0, dptr.length);
-        optr[this.inputNeuronCount] = synth[0] / normfac[0];
+        optr[this.inputNeuronCount] = 0.0;//synth[0] / normfac[0];
         normalizeWeight(optr);
     }
 
     /*
-    * Данный метод тренирует нейронную сеть. Может очень долго работать,
-    * но отображает прогресс работы в owner-форму
-    *
+    * Данный метод тренирует нейронную сеть.
     * */
     public void learn() throws RuntimeException {
-        int key, iter, n_retry, nwts;
+        int n_retry;
         int won[], winners;
-        double work[], corrections[][], rate, best_err, dptr[];
+        double /*work[], */corrections[][], rate, best_err, dptr[];
         double bigerr[] = new double[1];
         double bigcorr[] = new double[1];
         KohonenNeuralNetwork bestNet; //сохраняем лучшую сюда
@@ -341,31 +334,34 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
         this.totalError = 1.0;
 
         for(int tset = 0; tset < this.trainer.getTrainingSetCount(); tset++) {
-            dptr = this.trainer.getInputSet(tset);
-            if(vectorLength(dptr) < 1.E-30)
+            dptr = this.trainer.getInputSet(tset); //входной вектор символа
+            if(getVectorLength(dptr) < 1.E-30) //сумма квадратов строки вектора
                 throw (new RuntimeException("Multiplicative normalization has null training case"));
         }
 
         bestNet = new KohonenNeuralNetwork(this.inputNeuronCount, this.outputNeuronCount, this.owner);
-
         won = new int[this.outputNeuronCount];
         corrections = new double[this.outputNeuronCount][this.inputNeuronCount + 1];
 
-        if(learnMethod == 0)
-            work = new double[inputNeuronCount + 1];
-        else
-            work = null;
+        //if(learnMethod == 0)
+        //    work = new double[inputNeuronCount + 1];
+        //else
+            //work = null;
 
         rate = this.learnRate;
 
+        /*ШАГ 4. Инициализация нейронной сети - чистка весов,
+        *        их рандомизирование и нормирование
+        * */
         initialize();
 
-        best_err = 1.e30;
-        n_retry = 0;
+        best_err = 1.e30; //ошибка
+        n_retry = 0;  //текущая итерация
 
-        for(iter = 0;; iter++) {
-            evaluateErrors(rate, this.learnMethod, won, bigerr,
-                           corrections, work);
+        for(int i = 0;; i++) {
+            //Расчет ошибки
+            evaluateErrors(rate/*, this.learnMethod*/, won, bigerr,
+                           corrections/*, work*/);
             this.totalError = bigerr[0];
 
             if(this.totalError < best_err) {
@@ -375,20 +371,21 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
             winners = 0;
 
-            for(int i = 0; i < won.length; i++) {
-                if(won[i] != 0)
+            for(int j = 0; j < won.length; j++) {
+                if(won[j] != 0)
                     winners++;
             }
 
+            //Условие выхода из цикла - если ошибка меньше заданного уровня, то break
             if(bigerr[0] < quitError)
                 break;
 
-            if((winners < this.outputNeuronCount) && (winners < this.trainer.getTrainingSetCount())) {
+            if(winners < this.outputNeuronCount /*&& (winners < this.trainer.getTrainingSetCount())*/) {
                 forceWin(won);
                 continue;
             }
 
-            adjustWeights(rate, this.learnMethod, won, bigcorr, corrections);
+            adjustWeights(rate/*, this.learnMethod*/, won, bigcorr, corrections);
 
             owner.updateStats(n_retry, this.totalError, best_err);
             if(this.halt) {
@@ -401,7 +398,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
                 if(++n_retry > this.retries)
                     break;
                 initialize();
-                iter = -1;
+                i = -1;
                 rate = this.learnRate;
                 continue;
             }
@@ -412,9 +409,8 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
         copyWeights(this, bestNet);
 
-        for(int i = 0; i < this.outputNeuronCount; i++) {
+        for(int i = 0; i < this.outputNeuronCount; i++)
             normalizeWeight(this.outputWeights[i]);
-        }
 
         this.halt = true;
         n_retry++;
@@ -423,13 +419,13 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
     /*Инициализация нейронной сети Кохонена*/
     public void initialize() {
-        double optr[];
+        double vector[];
 
         clearWeights();
-        randomizeWeights(this.outputWeights);
+        setRandomToWeights(this.outputWeights);
         for(int i = 0; i < this.outputNeuronCount; i++) {
-            optr = this.outputWeights[i];
-            normalizeWeight(optr);
+            vector = this.outputWeights[i];
+            normalizeWeight(vector);
         }
     }
    }

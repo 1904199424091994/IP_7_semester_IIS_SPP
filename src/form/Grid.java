@@ -36,7 +36,6 @@ public class Grid extends JPanel {
         g.setColor(Color.white);
         g.fillRect(0,0,this.getWidth(), this.getHeight());
         g.setColor(Color.black);
-        System.out.println("-1???? что?");
         g.drawRect(0, 0, this.getWidth() - 1, this.getHeight() - 1);
     }
 
