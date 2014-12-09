@@ -6,37 +6,28 @@ import form.AppForm;
  * Created by 1 on 29.11.2014.
  */
 public class KohonenNeuralNetwork extends NeuralNetwork {
-    //веса выходных нейронов, рассчитывающиеся по весам входных нейронов
-    protected double outputWeights[][];
-    //метод тренировки
-    //protected int learnMethod = 1; //(0 - метод-суммы, 1 - метод-вычисления)
-    //коэффициент обучения
-    protected double learnRate = 0.3;
-    //прерываем, если ошибка за пределами данного лимита
-    protected double quitError = 0.1;
-    //число циклов алгоритма перед выходом
-    protected int retries = 10000;
-    //фактор упрощения
-    protected double reduction = 0.99;
-    //связка с формой
-    protected AppForm owner;
-    //Тренер
-    protected Trainer trainer;
-    //Прерывает тренировку
-    public boolean halt = false;
+    protected double outputWeights[][]; //Веса нейронов на выходе
+    protected double learnRate = 0.3; //Константа, используемая для настройки весов нейронов
+    protected double quitError = 0.1; //Допустимый уровень ошибки. Если ошибка, рассчитываемая в ходе обучения меньше, чем значение данной константы, то алгоритм обучения сети завершается.
+    protected int retries = 10000; //Предустановленное значение итераций цикла обучения нейронной сети.
+    protected double reduction = 0.99; //Величина, на которую уменьшается learnRate в конце каждой итерации обучения.  В данном случае на 1% (rate *= this.reduction)
+    protected AppForm form; //Форма, пользовательского интерфейса.
+    protected Trainer trainer; //Экземпляр класса, который хранит наборы для обучения нейронной сети.
+    public boolean halt = false; //Обозначает, что нейронная сеть завершила свое обучение
+
     /*
     *  Конструктор класса KohonenNeuralNetwork
     *  @inputCount --- число нейронов на входе
     *  @outputCount --- число нейронов на выходе
-    *  @owner --- связка с формой
+    *  @form --- связка с формой
     * */
-    public KohonenNeuralNetwork(int inputCount, int outputCount, AppForm owner) {
+    public KohonenNeuralNetwork(int inputCount, int outputCount, AppForm form) {
         this.totalError = 1.0;
         this.inputNeuronCount = inputCount;
         this.outputNeuronCount = outputCount;
         this.outputWeights = new double[outputNeuronCount][inputNeuronCount + 1];
         this.output = new double[outputNeuronCount];
-        this.owner = owner;
+        this.form = form;
     }
 
     /*Установка "тренера"*/
@@ -177,7 +168,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     * @work --- область работ
     * */
 
-    void evaluateErrors(double rate, /*int learnMethod,*/ int won[],
+    private void evaluateErrors(double rate, /*int learnMethod,*/ int won[],
                         double error[], double corrections[][]
                         /*double work[]*/) throws  RuntimeException {
         int best, size, tset;
@@ -243,10 +234,10 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     * @errors --- ошибки
     * @corrections --- коррекции
     * */
-    void adjustWeights(double rate, //int learnMethod,
+    private void adjustWeights(double rate, //int learnMethod,
                        int[] won, double error[],
                        double corrections[][]) {
-        double corr, correction[], weight[], length, f;
+        double corr, correction[], weight[], length, factor;
 
         error[0] = 0.0;
 
@@ -258,15 +249,15 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
             weight = this.outputWeights[i];
             correction = corrections[i];
 
-            f = 1.0 / (double)won[i];
+            factor = 1.0 / (double)won[i];
 
             //if(learnMethod != 0)
-                f *= rate;
+            factor *= rate;
 
             length = 0.0;
 
             for(int j = 0; j < this.inputNeuronCount; j++) {
-                corr = f * correction[j];
+                corr = factor * correction[j];
                 weight[j] += corr;
                 length += (corr * corr);
             }
@@ -282,7 +273,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     *
     * @won - счетчик побед нейронов
     * */
-    void forceWin(int won[]) throws RuntimeException {
+    private void forceWin(int won[]) throws RuntimeException {
         int best, size, which = 0;
         double dptr[], normfac[] = new double[1];
         double /*synth[] = new double[1],*/ dist, optr[];
@@ -336,10 +327,10 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
         for(int tset = 0; tset < this.trainer.getTrainingSetCount(); tset++) {
             dptr = this.trainer.getInputSet(tset); //входной вектор символа
             if(getVectorLength(dptr) < 1.E-30) //сумма квадратов строки вектора
-                throw (new RuntimeException("Multiplicative normalization has null training case"));
+                throw (new RuntimeException("Нулевой случай тренировки"));
         }
 
-        bestNet = new KohonenNeuralNetwork(this.inputNeuronCount, this.outputNeuronCount, this.owner);
+        bestNet = new KohonenNeuralNetwork(this.inputNeuronCount, this.outputNeuronCount, this.form);
         won = new int[this.outputNeuronCount];
         corrections = new double[this.outputNeuronCount][this.inputNeuronCount + 1];
 
@@ -387,9 +378,9 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
             adjustWeights(rate/*, this.learnMethod*/, won, bigcorr, corrections);
 
-            owner.updateStats(n_retry, this.totalError, best_err);
+            form.updateStats(n_retry, this.totalError, best_err);
             if(this.halt) {
-                owner.updateStats(n_retry, this.totalError, best_err);
+                form.updateStats(n_retry, this.totalError, best_err);
                 break;
             }
             Thread.yield();
@@ -414,7 +405,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
 
         this.halt = true;
         n_retry++;
-        owner.updateStats(n_retry, this.totalError, best_err);
+        form.updateStats(n_retry, this.totalError, best_err);
     }
 
     /*Инициализация нейронной сети Кохонена*/
