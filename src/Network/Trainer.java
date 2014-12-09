@@ -8,7 +8,6 @@ public class Trainer {
     private int outputCount;
     private double[][] input;
     private double[][] output;
-    //private double[] classify;
     private int trainingSetCount;
 
     public Trainer(int inputCount, int outputCount) {
@@ -29,7 +28,6 @@ public class Trainer {
         this.trainingSetCount = trainingSetCount;
         input = new double[trainingSetCount][inputCount];
         output = new double[trainingSetCount][outputCount];
-        //classify = new double[trainingSetCount];
     }
 
     public int getTrainingSetCount() {
@@ -57,16 +55,6 @@ public class Trainer {
         output[set][index] = value;
     }
 
-    /*public void setClassify(int set,double value)
-            throws RuntimeException
-    {
-        if ((set<0) || (set>=trainingSetCount))
-            throw(new RuntimeException("Параметр set находится вне массива:" + set ));
-        //classify[set] = value;
-    }*/
-
-
-
     public double getInput(int set,int index)
             throws RuntimeException
     {
@@ -87,15 +75,6 @@ public class Trainer {
             throw(new RuntimeException("Параметр index находится вне массива:" + index ));
         return output[set][index];
     }
-
-
-    /*public double getClassify(int set)
-            throws RuntimeException
-    {
-        if ((set < 0) || (set >= trainingSetCount))
-            throw(new RuntimeException("Параметр set находится вне массива:" + set ));
-        return classify[set];
-    }*/
 
     public double[] getOutputSet(int set)
             throws RuntimeException

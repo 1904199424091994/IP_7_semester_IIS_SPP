@@ -3,7 +3,6 @@ package form;
 
 import Network.KohonenNeuralNetwork;
 import Network.Trainer;
-import Statistics.UpdateStats;
 import Helpers.Helper;
 
 import javax.swing.*;
@@ -32,9 +31,6 @@ public class AppForm extends JFrame implements Runnable {
     private JButton btnRecognize;
     private JButton btnSave;
     private JButton btnLoad;
-    public static JLabel lblTries;
-    public static JLabel lblLastError;
-    public static JLabel lblBestError;
     private JScrollPane jListScrollPane;
     private JList lstLetters;
     //endregion
@@ -177,27 +173,10 @@ public class AppForm extends JFrame implements Runnable {
         jListScrollPane.getViewport().add(lstLetters);
         lstLetters.setModel(letterListModel);
         //endregion
-
-        //region Labels для статистики
-        lblTries = new JLabel("tries...");
-        lblTries.setBounds(500, 10, 100, 30);
-        container.add(lblTries);
-
-        lblBestError = new JLabel("bestError...");
-        lblBestError.setBounds(500, 50, 100, 30);
-        container.add(lblBestError);
-
-        lblLastError = new JLabel("lastError...");
-        lblLastError.setBounds(500, 90, 100, 30);
-        container.add(lblLastError);
-        //endregion
     }
 
     //Вывод статистики
-    public void updateStats(long trial, double error, double best) {
-        /*if ((((trial % 100) != 0) || (trial == 10)) && !network.halt)
-            return;*/
-
+    public void trainingLog() {
         if (network.halt) {
             trainThread = null;
             btnBeginTraining.setText("Тренировать");
@@ -205,25 +184,11 @@ public class AppForm extends JFrame implements Runnable {
                     "Обучение нейронной сети завершено!", "Тренировка",
                     JOptionPane.PLAIN_MESSAGE);
         }
-
-        /*UpdateStats stats = new UpdateStats();
-        stats.tries = trial;
-        stats.lastError = error;
-        stats.bestError = best;
-
-        try {
-            SwingUtilities.invokeAndWait(stats);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e, "Training",
-                    JOptionPane.ERROR_MESSAGE);
-        }*/
     }
 
     //region Функционал списка
     private void addNewLetter() {
-        //Панель
         JPanel panel = new JPanel();
-        //Текстбокс для букв
         JTextField txtLetters = new JTextField("", 20);
         txtLetters.setEditable(true);
         panel.add(txtLetters);
@@ -293,15 +258,11 @@ public class AppForm extends JFrame implements Runnable {
     //Метод run() потока тренировки нейронной сети
     public void run() {
         try {
-            int inputNeuron = AppForm.gridWidth * AppForm.gridHeight; //произведение, потому что в вектор
-            int outputNeuron = letterListModel.size(); //выходное число нейронов = числу обучаемых букв
-            Trainer trainer = new Trainer(inputNeuron, outputNeuron);
+            int inputNeuronCount = AppForm.gridWidth * AppForm.gridHeight; //произведение, потому что в вектор
+            int outputNeuronCount = letterListModel.size(); //выходное число нейронов = числу обучаемых букв
+            Trainer trainer = new Trainer(inputNeuronCount, outputNeuronCount);
             trainer.setTrainingSetCount(letterListModel.size()); //число наборов для тренировки = числу символов
-            /*
-            *   ШАГ 1. Формирование входных данных. Каждый набор представляет собой соответствие между буквой и набором
-            *   GridData-ы всех введенных символов  переконвертируются в одномерные массивы типа double
-                для "тренера" нейронной сети
-            * */
+
             for (int i = 0; i < letterListModel.size(); i++) {
                 int j = 0;
                 GridData gridData = (GridData) letterListModel.getElementAt(i);
@@ -314,16 +275,10 @@ public class AppForm extends JFrame implements Runnable {
                     }
                 }
             }
-            /*
-            * ШАГ 2. Создание экземпляра нейронной сети Кохонена
-            * */
-            network = new KohonenNeuralNetwork(inputNeuron, outputNeuron, this);
-            network.setTrainer(trainer);
 
-            /*
-            * ШАГ 3. Начало обучения нейронной сети
-            * */
-            network.learn(); //обучаем нейронную сеть
+            network = new KohonenNeuralNetwork(inputNeuronCount, outputNeuronCount, this);
+            network.setTrainer(trainer);
+            network.train();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Ошибка: " + e,
                     "Тренировка",
@@ -343,44 +298,42 @@ public class AppForm extends JFrame implements Runnable {
         inputImage.convertToGrid();
 
         double input[] = new double[this.gridWidth * this.gridHeight];
-        int idx = 0;
+        int index = 0;
         GridData gridData = recognizedSymbolGrid.getGridData();
-        for ( int j=0;j<gridData.getHeight();j++ ) {
-            for ( int i=0;i<gridData.getWidth();i++ ) {
-                input[idx++] = gridData.getDataFromGrid(i, j)?.5:-.5;
+        for ( int j = 0; j < gridData.getHeight(); j++) {
+            for ( int i = 0; i < gridData.getWidth(); i++) {
+                input[index++] = gridData.getDataFromGrid(i, j)?.5:-.5;
             }
         }
 
-        double normfac[] = new double[1];
-        //double synth[] = new double[1];
+        double normalizationFactor[] = new double[1];
 
-        int best = network.getWinner(input, normfac/*, synth*/);
-        char map[] = mapNeurons();
+        int best = network.getWinner(input, normalizationFactor);
+        char map[] = mapNeuronsToSymbols();
         JOptionPane.showMessageDialog(this,
                 "  That letter is " + map[best], "Recognition Successful",
                 JOptionPane.PLAIN_MESSAGE);
         clear();
     }
 
-    private char[] mapNeurons()
+    private char[] mapNeuronsToSymbols()
     {
         char map[] = new char[letterListModel.size()];
-        double normfac[] = new double[1];
-        //double synth[] = new double[1];
+        double normalizationFactor[] = new double[1];
 
         for (int i = 0; i < map.length; i++ )
-            map[i] = '?';
+            map[i] = '-';
 
         for (int i = 0; i < letterListModel.size(); i++) {
             double input[] = new double[this.gridWidth * this.gridHeight];
-            int idx = 0;
+            int index = 0;
             GridData gridData = (GridData)letterListModel.getElementAt(i);
             for (int m = 0; m < gridData.getHeight(); m++ ) {
                 for (int n=0; n<gridData.getWidth(); n++) {
-                    input[idx++] = gridData.getDataFromGrid(n,m)?.5:-.5;
+                    input[index++] = gridData.getDataFromGrid(n,m)?.5:-.5;
                 }
             }
-            int best = network.getWinner(input, normfac/*, synth*/) ;
+            int best = network.getWinner(input, normalizationFactor) ;
             map[best] = gridData.getSymbol();
         }
         return map;
@@ -395,9 +348,9 @@ public class AppForm extends JFrame implements Runnable {
             for (int i = 0; i < letterListModel.size(); i++) {
                 GridData gridData = (GridData)letterListModel.elementAt(i);
                 outStreamWriter.write(gridData.getSymbol() + ":");
-                for(int y = 0; y < gridData.getHeight(); y++) {
-                    for (int x = 0; x < gridData.getWidth(); x++) {
-                        outStreamWriter.write(gridData.getDataFromGrid(x, y) ? "1" : "0");
+                for(int n = 0; n < gridData.getHeight(); n++) {
+                    for (int m = 0; m < gridData.getWidth(); m++) {
+                        outStreamWriter.write(gridData.getDataFromGrid(m, n) ? "1" : "0");
                     }
                 }
                 outStreamWriter.newLine();
@@ -416,19 +369,19 @@ public class AppForm extends JFrame implements Runnable {
 
     public void loadFromFile() {
         try {
-            BufferedReader inputStreamReader;// used to read the file line by line
+            BufferedReader inputStreamReader;
             inputStreamReader = new BufferedReader(new InputStreamReader(new FileInputStream ("./sample.dat"), "UTF8"));
             String line;
-            int i = 0;
+            int l = 0;
             letterListModel.clear();
 
             while ((line = inputStreamReader.readLine()) !=null) {
                 GridData gridData = new GridData(line.charAt(0), AppForm.gridWidth, AppForm.gridHeight);
-                letterListModel.add(i++, gridData);
-                int idx = 2;
-                for (int y = 0; y < gridData.getHeight(); y++) {
-                    for (int x = 0; x < gridData.getWidth(); x++) {
-                        gridData.setDataToGrid(x,y,line.charAt(idx++)=='1');
+                letterListModel.add(l++, gridData);
+                int index = 2;
+                for (int j = 0; j < gridData.getHeight(); j++) {
+                    for (int i = 0; i < gridData.getWidth(); i++) {
+                        gridData.setDataToGrid(i,j,line.charAt(index++)=='1');
                     }
                 }
             }

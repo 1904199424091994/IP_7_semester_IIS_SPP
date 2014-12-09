@@ -201,57 +201,5 @@ public class InputImage extends JPanel {
         this.repaint();
     }
 }
-    /*public void convertToGrid(Image textImage, int widthStart, int heightStart, int widthEnd, int heightEnd, int iW, int iH) {
-        if(widthEnd == -1) {
-            widthEnd = this.image.getWidth(this);
-        }
-        if(heightEnd == -1) {
-            heightEnd = this.image.getHeight(this);
-        }
 
-        PixelGrabber pixelGrabber = new PixelGrabber(textImage, 0, 0, iW, iH, true);
-
-        try {
-            pixelGrabber.grabPixels();
-            this.pixelMap = (int[])pixelGrabber.getPixels();
-            GridData gridData = this.grid.getGridData();
-            x_InputSymbolLeft = widthStart;
-            x_InputSymbolRight = widthEnd + widthStart;
-            y_InputSymbolBottom = heightStart + heightEnd;
-            y_InputSymbolTop = heightStart + heightEnd;
-
-        } catch(InterruptedException e) {
-
-        }
-    }*/
-
-        /*protected boolean downSampleQuadrant(int x,int y, Image img)
-    {
-        int w = img.getWidth(this);
-        int startX = (int)(x_InputSymbolLeft + (x * coefficientX));
-        int startY = (int)(y_InputSymbolTop+(y * coefficientY));
-        int endX = (int)(startX + coefficientX);
-        int endY = (int)(startY + coefficientY);
-
-        for ( int yy=startY;yy<=endY;yy++ ) {
-            for ( int xx=startX;xx<=endX;xx++ ) {
-                int loc = xx+(yy*w);
-
-                int p = pixelMap[loc];
-                int r = 0xff & (p >> 16);
-                int g = 0xff & (p >> 8);
-                int b = 0xff & (p);
-                int intensity = (r + g + b)/3;
-                Boolean white = false;
-                if (intensity > 150) {
-                    //return false;
-                } else {
-                    return true;
-                }
-
-            }
-        }
-
-        return false;
-    }*/
 

@@ -15,8 +15,7 @@ abstract public class NeuralNetwork {
     protected int outputNeuronCount;
     protected Random random = new Random(System.currentTimeMillis());
 
-    abstract public void learn() throws RuntimeException;
-    //abstract void trial(double[] input);
+    abstract public void train() throws RuntimeException;
 
     public double[] getOutput() {
         return output;
