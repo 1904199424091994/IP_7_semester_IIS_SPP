@@ -9,7 +9,6 @@ public class GridData implements Comparable, Cloneable{
     public GridData(char symbol, int width, int height) {
         grid = new boolean[width][height];
         this.symbol = symbol;
-        System.out.println("ОЧень не нравиться метод compareTo - зачем он?");
     }
 
     //Высота сетки
