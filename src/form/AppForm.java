@@ -343,7 +343,7 @@ public class AppForm extends JFrame implements Runnable {
     //region Загрузить/сохранить в файл
     public void saveToFile() {
         try {
-            BufferedWriter outStreamWriter = new BufferedWriter (new OutputStreamWriter(new FileOutputStream("./sample.dat"), "UTF8"));
+            BufferedWriter outStreamWriter = new BufferedWriter (new OutputStreamWriter(new FileOutputStream("./letters.dat"), "UTF8"));
 
             for (int i = 0; i < letterListModel.size(); i++) {
                 GridData gridData = (GridData)letterListModel.elementAt(i);
@@ -358,7 +358,7 @@ public class AppForm extends JFrame implements Runnable {
             outStreamWriter.close();
             clear();
             JOptionPane.showMessageDialog(this,
-                    "Сохранено в 'sample.dat'.",
+                    "Сохранено в 'letters.dat'.",
                     "Сохранение",
                     JOptionPane.PLAIN_MESSAGE);
 
@@ -370,7 +370,7 @@ public class AppForm extends JFrame implements Runnable {
     public void loadFromFile() {
         try {
             BufferedReader inputStreamReader;
-            inputStreamReader = new BufferedReader(new InputStreamReader(new FileInputStream ("./sample.dat"), "UTF8"));
+            inputStreamReader = new BufferedReader(new InputStreamReader(new FileInputStream ("./letters.dat"), "UTF8"));
             String line;
             int l = 0;
             letterListModel.clear();
@@ -388,7 +388,7 @@ public class AppForm extends JFrame implements Runnable {
             inputStreamReader.close();
             clear();
             JOptionPane.showMessageDialog(this,
-                    "Загружено из 'sample.dat'.","Загрузка",
+                    "Загружено из 'letters.dat'.","Загрузка",
                     JOptionPane.PLAIN_MESSAGE);
 
         } catch ( Exception e ) {

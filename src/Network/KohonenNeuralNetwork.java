@@ -46,7 +46,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     }
 
     /*Нормализация ввода*/
-    private void normalizeInput(final double input[], double normalizationFactor[]) {
+    private void normalizeInput(double input[], double normalizationFactor[]) {
         double length;
         length = getVectorLength(input);
 
@@ -57,7 +57,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     }
 
     /*Нормализация весов*/
-    void normalizeWeight(double[] vector) {
+    private void normalizeWeights(double[] vector) {
         double length;
         length = getVectorLength(vector);
 
@@ -207,7 +207,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
         outputWeightsVector = outputWeights[which];
         System.arraycopy(inputSet, 0, outputWeightsVector, 0, inputSet.length);
         outputWeightsVector[inputNeuronCount] = 0.0;
-        normalizeWeight(outputWeightsVector);
+        normalizeWeights(outputWeightsVector);
     }
 
     /*Тренирует нейронную сеть.*/
@@ -279,7 +279,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
         copyWeights(this, bestNet);
 
         for(int i = 0; i < outputNeuronCount; i++)
-            normalizeWeight(outputWeights[i]);
+            normalizeWeights(outputWeights[i]);
 
         halt = true;
         iteration++;
@@ -287,14 +287,14 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
     }
 
     /*Инициализация нейронной сети Кохонена*/
-    public void initialize() {
+    private void initialize() {
         double vector[];
 
         clearWeights();
         setRandomToWeights(this.outputWeights);
         for(int i = 0; i < this.outputNeuronCount; i++) {
             vector = this.outputWeights[i];
-            normalizeWeight(vector);
+            normalizeWeights(vector);
         }
     }
 }

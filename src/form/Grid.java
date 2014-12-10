@@ -7,7 +7,7 @@ import java.awt.*;
  * Created by 1 on 16.11.2014.
  */
 public class Grid extends JPanel {
-    GridData gridData;
+    private GridData gridData;
     public Grid(int width, int height) {
         gridData = new GridData(' ', width, height);
     }
