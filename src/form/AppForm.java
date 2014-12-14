@@ -311,7 +311,7 @@ public class AppForm extends JFrame implements Runnable {
         int best = network.getWinner(input, normalizationFactor);
         char map[] = mapNeuronsToSymbols();
         JOptionPane.showMessageDialog(this,
-                "  That letter is " + map[best], "Recognition Successful",
+                "  Введенный символ " + map[best], "Распознавание завершилось успешно",
                 JOptionPane.PLAIN_MESSAGE);
         clear();
     }

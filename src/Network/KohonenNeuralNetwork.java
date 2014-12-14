@@ -261,7 +261,7 @@ public class KohonenNeuralNetwork extends NeuralNetwork {
             if(this.halt)
                 break;
 
-            Thread.yield();
+            //Thread.yield();
 
             if(error[0] < 1E-5) {
                 if(++iteration > iterations)
